@@ -1,0 +1,15 @@
+const assert=require('node:assert/strict'),C=require('./dist/core.js');
+const ex=(kg,reps=8,mode='weight',name='Press banca · barra')=>({key:C.key(name,mode),name,mode,sets:[{weightKg:kg,reps}]});
+const w=(e,id='1')=>({id,date:'2026-11-03',title:'QA',exercises:[e]});
+assert.equal(C.personalRecords([],[ex(60)]).length,0);
+assert.equal(C.personalRecords([w(ex(60))],[ex(65)])[0].previous,60);
+assert.equal(C.personalRecords([w(ex(60))],[ex(60)]).length,0);
+assert.equal(C.personalRecords([w(ex(60))],[ex(55)]).length,0);
+assert.equal(C.personalRecords([w(ex(60))],[ex(65,7)]).length,0);
+assert.equal(C.personalRecords([w(ex(60))],[ex(65,8,'weight','Press banca · mancuernas')]).length,0);
+assert.equal(C.personalRecords([w(ex(60,8,'assisted'))],[ex(65,8,'assisted')]).length,0);
+assert.ok(Math.abs(C.toKg(C.fromKg(60,'lb'),'lb')-60)<1e-9);
+const state={...C.fresh(),workouts:[w(ex(60))],routines:[{id:'r',name:'Pierna',day:1,exercises:[{name:'Sentadilla · barra',key:C.key('Sentadilla · barra'),mode:'weight',targetSets:3}]}]};
+assert.deepEqual(C.validate(JSON.parse(JSON.stringify(state))),state);
+for(const bad of [{}, {...state,version:2},{...state,unit:'stone'},{...state,workouts:[w(ex(-4))]},{...state,workouts:[w(ex(40,2.5))]},{...state,workouts:[{...w(ex(40)),date:'2026-02-30'}]},{...state,workouts:[{...w(ex(40)),exercises:[{...ex(40),key:'wrong'}]}]}])assert.throws(()=>C.validate(bad));
+console.log('PASS: 16 core checks: same-rep PR, first baseline, ties, lower loads, exercise isolation, assisted loads, unit conversion, JSON backup roundtrip and malformed import rejection.');
